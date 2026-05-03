@@ -7,3 +7,10 @@
 
 
 ## Multiple Spawn and Removing Drop
+- Without `drop(spawner)`:
+    - ![Multiple spawn without drop image](/assets/images/MultipleSpawnWithoutDrop.png)
+        - Explanation: Program ngeprint semua "Nadia's Komputer: howdy!" dan "Nadia's Komputer: done!" tapi nggak berhenti sendiri dan harus distop paksa pakai Ctrl+C karena `executor.run()` itu kerjanya nunggu task dari channel. Jika `spawner` nggak didrop, channelnya masih terbuka dan executor bakal nunggu terus siapa tau akan ada task baru yang masuk, padahal udah tidak ada task lagi, jadi programnya nyangkut selamanya.
+- With `drop(spawner)`:
+    - ![Multiple spawn with drop image](/assets/images/MultipleSpawnWithDrop.png)
+        - Explanation: Program berjalan dengan normal dan berhenti sendiri setelah semua task selesai. Ketika `drop(spawner)` dipanggil, channel sendernya ditutup. Executor yang lagi nunggu di `ready_queue.recv()` akhirnya dapat sinyal bahwa tidak akan ada task baru lagi, jadi dia bisa keluar dari loop dan program selesai.
+- Explanation tambahan: Urutan "Nadia's Komputer: done"nya berbeda-beda karena ketiga task berjalan secara asynchronous, jadi siapa yang timernya selesai duluan, dia yang lanjut duluan. Urutannya jadi bisa beda-beda tiap kali dijalankan.

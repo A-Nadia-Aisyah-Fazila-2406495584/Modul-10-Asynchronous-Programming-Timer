@@ -6,7 +6,7 @@
         - "Nadia's Komputer: hey hey!" muncul lebih dulu sebelum "Nadia's Komputer: howdy!" karena `spawner.spawn()` hanya mendaftarkan task ke dalam antrian dan tidak langsung menjalankannya. Task baru benar-benar dieksekusi waktu `executor.run()` dipanggil. Jadinya kode` println!("Nadia's Komputer: hey hey!")` yang berada setelah `spawn()` itu langsung dijalankan secara sync, sementara task async menunggu turnnya di antrian. Kemudian ada jeda 2 secs antara "Nadia's Komputer: howdy!" dan "Nadia's Komputer: done!" karena di dalam task async ada `TimerFuture::new(Duration::new(2, 0)).await`. Waktu `.await` dipanggil, future akan mengembalikan `Poll::Pending` dan melepaskan kontrol thread sambil nunggu timernya selesai. Setelah 2 detik baru thread timer panggil `waker.wake()` untuk memberitahu executor jika task siap dilanjutkan, lalu executor mengpoll future lagi dan cetak "Nadia's Komputer: done!".
 
 
-## Multiple Spawn and Removing Drop
+## Experiment 1.3: Multiple Spawn and Removing Drop
 - Without `drop(spawner)`:
     - ![Multiple spawn without drop image](/assets/images/MultipleSpawnWithoutDrop.png)
         - Explanation: Program ngeprint semua "Nadia's Komputer: howdy!" dan "Nadia's Komputer: done!" tapi nggak berhenti sendiri dan harus distop paksa pakai Ctrl+C karena `executor.run()` itu kerjanya nunggu task dari channel. Jika `spawner` nggak didrop, channelnya masih terbuka dan executor bakal nunggu terus siapa tau akan ada task baru yang masuk, padahal udah tidak ada task lagi, jadi programnya nyangkut selamanya.
